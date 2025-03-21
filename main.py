@@ -13,7 +13,7 @@ from SAC_models import SAC
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Train SAC on Half-Cheetah with wandb logging")
+    parser = argparse.ArgumentParser(description="Train SAC with wandb logging")
     
     # Environment parameters
     parser.add_argument("--env_name", type=str, default="HalfCheetah-v5", help="Gym environment name")
@@ -35,6 +35,8 @@ def parse_args():
     parser.add_argument("--batch_size", type=int, default=256, help="Batch size")
     parser.add_argument("--buffer_size", type=int, default=1000000, help="Replay buffer size")
     parser.add_argument("--auto_tune_alpha", type=bool, default=True, help="Automatically tune alpha")
+    parser.add_argument("--policy_type", type=str, default="gaussian", choices=["gaussian", "gmm"], help="Policy type")
+    parser.add_argument("--reparameterize", action="store_true", help="Use reparameterization trick")
     
     # Wandb parameters
     parser.add_argument("--wandb_project", type=str, default="sac-test", help="Wandb project name")
@@ -68,7 +70,9 @@ if __name__ == "__main__":
     
     # Create a unique run name and group name for wandb
     # Group name includes all hyperparameters except seed
-    group_name = f"{args.env_name}_h{args.hidden_dim}_lr{args.lr}_g{args.gamma}_t{args.tau}_a{args.alpha}_bs{args.batch_size}"
+    group_name = f"{args.env_name}_h{args.hidden_dim}_lr{args.lr}_g{args.gamma}_t{args.tau}_a{args.alpha}_bs{args.batch_size}_p{args.policy_type}"
+    if args.reparameterize:
+        group_name += "_repar"
     run_name = f"{group_name}_seed{args.seed}"
     
     # Initialize wandb
@@ -95,6 +99,8 @@ if __name__ == "__main__":
         batch_size=args.batch_size,
         buffer_size=args.buffer_size,
         auto_tune_alpha=args.auto_tune_alpha,
+        policy_type=args.policy_type,
+        reparameterize=args.reparameterize,
         wandb_log=not args.no_wandb
     )
     

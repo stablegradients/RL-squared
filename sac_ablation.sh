@@ -74,16 +74,27 @@ for env in "${ENVIRONMENTS[@]}"; do
         # Create a unique experiment name
         exp_name="${env}_seed${seed}"
         log_file="logs/${exp_name}.log"
+        checkpoint_dir="checkpoints/${exp_name}"
         
         echo "Starting experiment: $exp_name on GPU $SLOT"
         
-        # Run the experiment in the background
+        # Run the experiment with original Haarnoja SAC parameters
         CUDA_VISIBLE_DEVICES=$SLOT python main.py \
             --env_name "$env" \
             --seed "$seed" \
+            --policy_type gaussian \
+            --reparameterize \
+            --hidden_dim 256 \
+            --lr 3e-4 \
+            --gamma 0.99 \
+            --tau 0.005 \
+            --alpha 0.2 \
+            --auto_tune_alpha True \
+            --batch_size 256 \
+            --buffer_size 1000000 \
             --wandb_project "sac-ablation" \
-            --tags "ablation,$env" \
-            --checkpoint_dir "checkpoints/$exp_name" > "$log_file" 2>&1 &
+            --tags "original-sac,$env" \
+            --checkpoint_dir "$checkpoint_dir" > "$log_file" 2>&1 &
         
         # Store the PID and its GPU slot
         pid=$!
@@ -98,4 +109,4 @@ done
 echo "All jobs submitted. Waiting for completion..."
 wait
 
-echo "All experiments completed!" 
+echo "All experiments completed!"
